@@ -28,17 +28,22 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const result = await signIn('credentials', {
-        username: formData.username,
-        password: formData.password,
-        redirect: false,
-      });
+      // 임시 로그인 (백엔드 연결 전)
+      if (formData.username === 'test' && formData.password === 'test') {
+        const result = await signIn('credentials', {
+          username: formData.username,
+          password: formData.password,
+          redirect: false,
+        });
 
-      if (result?.error) {
-        setError('아이디 또는 비밀번호가 올바르지 않습니다.');
+        if (result?.error) {
+          setError('세션 생성에 실패했습니다.');
+        } else {
+          // 로그인 성공 시 메인 페이지로 이동
+          router.push('/');
+        }
       } else {
-        // 로그인 성공 시 메인 페이지로 이동
-        router.push('/');
+        setError('아이디 또는 비밀번호가 올바르지 않습니다.');
       }
     } catch (err) {
       console.error('Login error:', err);

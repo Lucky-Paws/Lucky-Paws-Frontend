@@ -44,27 +44,16 @@ const handler = NextAuth({
           return null;
         }
 
-        try {
-          // 백엔드 API 호출
-          const response = await authService.login({
-            username: credentials.username,
-            password: credentials.password
-          });
-
-          if (response.success && response.data) {
-            return {
-              id: response.data.id.toString(),
-              name: response.data.name,
-              email: response.data.email,
-              accessToken: response.data.token,
-            };
-          }
-          
-          return null;
-        } catch (error) {
-          console.error('Login API error:', error);
-          return null;
+        // 임시 로그인 (백엔드 연결 전)
+        if (credentials.username === "test" && credentials.password === "test") {
+          return {
+            id: "1",
+            name: "테스트 사용자",
+            email: "test@example.com",
+          };
         }
+        
+        return null;
       }
     }),
     KakaoProvider({
@@ -96,16 +85,12 @@ const handler = NextAuth({
         // 소셜 로그인인 경우 백엔드 API 호출
         if ((account.provider === 'kakao' || account.provider === 'google') && account.access_token) {
           try {
-            console.log(`${account.provider} 로그인 - 백엔드 API 호출 시작`);
-            
             let response;
             if (account.provider === 'kakao') {
               response = await authService.kakaoLogin(account.access_token);
             } else {
               response = await authService.googleLogin(account.access_token);
             }
-            
-            console.log(`${account.provider} 로그인 - 백엔드 응답:`, response);
             
             if (response.success && response.data) {
               // 백엔드에서 받은 사용자 정보로 토큰 업데이트
@@ -118,15 +103,12 @@ const handler = NextAuth({
                 careerYear: response.data.careerYear,
                 schoolLevel: response.data.schoolLevel,
               };
-            } else {
-              console.error(`${account.provider} 로그인 - 백엔드 응답 실패:`, response.error);
             }
           } catch (error) {
             console.error(`${account.provider} 로그인 API 호출 실패:`, error);
           }
         }
         
-        // 일반 로그인 또는 소셜 로그인 실패 시 기본 정보만 포함
         return {
           ...token,
           accessToken: account.access_token,
