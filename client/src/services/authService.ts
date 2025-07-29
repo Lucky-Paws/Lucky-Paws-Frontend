@@ -153,6 +153,14 @@ class AuthService {
     }
   }
 
+  // 로그인
+  async login(loginData: { email: string; password: string }): Promise<ApiResponse<LoginResponseDto>> {
+    return this.request<LoginResponseDto>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(loginData),
+    });
+  }
+
   // 회원가입
   async signUp(userData: SignupRequestDto): Promise<ApiResponse<SignupResponseDto>> {
     return this.request<SignupResponseDto>('/auth/signup', {

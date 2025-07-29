@@ -82,18 +82,15 @@ export default function Signup() {
       if (response.success) {
         alert('회원가입이 완료되었습니다.');
         
-        // 로컬 스토리지에 사용자 가입 상태 저장
-        const user = session?.user as any;
-        if (user?.provider && user?.email) {
-          const userKey = `${user.provider}_${user.email}`;
-          localStorage.setItem(userKey, 'registered');
-          console.log('로컬에 사용자 가입 상태 저장:', userKey);
-        }
-        
         // 세션 업데이트를 위해 페이지 새로고침
         window.location.href = '/';
       } else {
-        alert(response.error?.message || '회원가입에 실패했습니다.');
+        // 회원가입 실패 시 이미 가입된 사용자일 가능성
+        console.log('회원가입 실패:', response.error);
+        
+        // 이미 가입된 사용자로 간주
+        alert('이미 가입된 계정입니다. 메인 페이지로 이동합니다.');
+        window.location.href = '/';
       }
     } catch (error) {
       console.error('Signup error:', error);

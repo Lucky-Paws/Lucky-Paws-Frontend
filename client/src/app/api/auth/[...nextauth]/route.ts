@@ -87,44 +87,37 @@ const handler = NextAuth({
         // 소셜 로그인인 경우 백엔드 API 호출
         if ((account.provider === 'kakao' || account.provider === 'google') && account.access_token) {
           try {
-            // 소셜 로그인 사용자 정보로 회원가입 시도
-            const signupData = {
+            // 먼저 로그인 시도 (이미 가입된 사용자인지 확인)
+            const loginData = {
               email: user.email || `${account.provider}_${Date.now()}@temp.com`,
-              password: account.access_token, // 임시 비밀번호로 사용
-              name: user.name || `${account.provider} User`,
-              nickname: user.name || `${account.provider} User`,
-              careerYear: 1,
-              schoolLevel: '초등'
+              password: account.access_token
             };
             
-            console.log('회원가입 시도:', signupData);
+            console.log('로그인 시도:', loginData);
             
-            const signupResponse = await authService.signUp(signupData);
-            console.log('회원가입 응답:', signupResponse);
+            const loginResponse = await authService.login(loginData);
+            console.log('로그인 응답:', loginResponse);
             
-            if (signupResponse.success && signupResponse.data) {
-              console.log('신규 사용자 회원가입 성공:', signupResponse.data);
+            if (loginResponse.success && loginResponse.data) {
+              console.log('기존 사용자 로그인 성공:', loginResponse.data);
               return {
                 ...token,
-                accessToken: account.access_token,
+                accessToken: loginResponse.data.token,
                 provider: account.provider,
-                userId: signupResponse.data.id,
-                nickname: signupResponse.data.nickname,
-                careerYear: signupResponse.data.careerYear,
-                schoolLevel: signupResponse.data.schoolLevel,
-                isRegistered: true, // 회원가입 완료
+                userId: loginResponse.data.id,
+                nickname: loginResponse.data.nickname,
+                careerYear: loginResponse.data.careerYear,
+                schoolLevel: loginResponse.data.schoolLevel,
+                isRegistered: true, // 기존 사용자
               };
             } else {
-              // 회원가입 실패 시 이미 존재하는 사용자일 가능성
-              console.log('회원가입 실패, 기존 사용자일 가능성:', signupResponse.error);
-              
-              // 회원가입 실패 시 기본적으로 신규 사용자로 처리
-              // 클라이언트에서 로컬 스토리지 확인 후 처리
+              // 로그인 실패 시 신규 사용자로 간주
+              console.log('로그인 실패, 신규 사용자로 간주');
               return {
                 ...token,
                 accessToken: account.access_token,
                 provider: account.provider,
-                isRegistered: false, // 기본적으로 신규 사용자
+                isRegistered: false, // 신규 사용자
               };
             }
           } catch (error) {
