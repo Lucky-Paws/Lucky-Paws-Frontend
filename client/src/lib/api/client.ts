@@ -19,7 +19,7 @@ class ApiClient {
     if (typeof window === 'undefined') return null;
     
     // NextAuth 세션에서 토큰 가져오기
-    const session = await fetch('/api/auth/session').then(res => res.json());
+    const session = await fetch('/api/auth/session').then(res => res.json()) as { accessToken?: string };
     return session?.accessToken || null;
   }
 
@@ -56,7 +56,7 @@ class ApiClient {
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Network error' }));
+        const error = await response.json().catch(() => ({ message: 'Network error' })) as { message?: string };
         throw new Error(error.message || `HTTP error! status: ${response.status}`);
       }
 
@@ -185,7 +185,7 @@ class ApiClient {
     });
   }
 
-  async put<T>(endpoint: string, data?: Record<string, unknown>, options?: RequestOptions): Promise<T> {
+  async put<T>(endpoint: string, data?: Record<string, string | number | boolean | null | undefined>, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
@@ -193,7 +193,7 @@ class ApiClient {
     });
   }
 
-  async patch<T>(endpoint: string, data?: Record<string, unknown>, options?: RequestOptions): Promise<T> {
+  async patch<T>(endpoint: string, data?: Record<string, string | number | boolean | null | undefined>, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PATCH',

@@ -107,7 +107,7 @@ export function usePosts(options: UsePostsOptions = {}) {
         
         setPosts(allPosts);
         setTotal(allPosts.length);
-      } catch (err) {
+      } catch {
         setError('게시글을 불러오는데 실패했습니다.');
       } finally {
         setLoading(false);

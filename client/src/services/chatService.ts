@@ -49,6 +49,6 @@ export const chatService = {
 
   // 메시지 전송
   async sendMessage(roomId: string, data: SendMessageDto): Promise<ChatMessage> {
-    return apiClient.post<ChatMessage>(API_ENDPOINTS.CHAT.SEND_MESSAGE(roomId), data as unknown as Record<string, unknown>);
+    return apiClient.post<ChatMessage>(API_ENDPOINTS.CHAT.SEND_MESSAGE(roomId), data as unknown as Record<string, string | number | boolean | null | undefined>);
   },
 };

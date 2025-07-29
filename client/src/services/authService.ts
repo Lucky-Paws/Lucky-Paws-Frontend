@@ -96,8 +96,8 @@ class AuthService {
         console.log('API 에러 결과:', result);
         return result;
       }
-    } catch (error) {
-      console.error('API request failed:', error);
+    } catch {
+      console.error('API request failed');
       return {
         success: false,
         error: {
