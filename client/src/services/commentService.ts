@@ -5,12 +5,10 @@ import { Comment } from '@/types';
 export interface CreateCommentDto {
   content: string;
   parentId?: string;
-  [key: string]: unknown;
 }
 
 export interface UpdateCommentDto {
   content: string;
-  [key: string]: unknown;
 }
 
 export interface CommentListResponse {

@@ -1,7 +1,7 @@
 import { API_BASE_URL } from './config';
 
 interface RequestOptions extends RequestInit {
-  params?: Record<string, string | number | boolean>;
+  params?: any;
 }
 
 class ApiClient {
@@ -177,7 +177,7 @@ class ApiClient {
     return this.request<T>(endpoint, { ...options, method: 'GET' });
   }
 
-  async post<T>(endpoint: string, data?: Record<string, unknown>, options?: RequestOptions): Promise<T> {
+  async post<T>(endpoint: string, data?: any, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'POST',
@@ -185,7 +185,7 @@ class ApiClient {
     });
   }
 
-  async put<T>(endpoint: string, data?: Record<string, string | number | boolean | null | undefined>, options?: RequestOptions): Promise<T> {
+  async put<T>(endpoint: string, data?: any, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
@@ -193,7 +193,7 @@ class ApiClient {
     });
   }
 
-  async patch<T>(endpoint: string, data?: Record<string, string | number | boolean | null | undefined>, options?: RequestOptions): Promise<T> {
+  async patch<T>(endpoint: string, data?: any, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PATCH',
