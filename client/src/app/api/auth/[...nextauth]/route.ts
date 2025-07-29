@@ -14,6 +14,7 @@ interface ExtendedToken extends JWT {
   nickname?: string;
   careerYear?: number;
   schoolLevel?: string;
+  isRegistered?: boolean;
 }
 
 interface ExtendedSession extends Session {
@@ -27,6 +28,7 @@ interface ExtendedSession extends Session {
     nickname?: string;
     careerYear?: number;
     schoolLevel?: string;
+    isRegistered?: boolean;
   }
 }
 
@@ -85,27 +87,56 @@ const handler = NextAuth({
         // 소셜 로그인인 경우 백엔드 API 호출
         if ((account.provider === 'kakao' || account.provider === 'google') && account.access_token) {
           try {
-            let response;
-            if (account.provider === 'kakao') {
-              response = await authService.kakaoLogin(account.access_token);
-            } else {
-              response = await authService.googleLogin(account.access_token);
-            }
+            // 소셜 로그인 사용자 정보로 회원가입 시도
+            const signupData = {
+              email: user.email || `${account.provider}_${Date.now()}@temp.com`,
+              password: account.access_token, // 임시 비밀번호로 사용
+              name: user.name || `${account.provider} User`,
+              nickname: user.name || `${account.provider} User`,
+              careerYear: 1,
+              schoolLevel: '초등'
+            };
             
-            if (response.success && response.data) {
-              // 백엔드에서 받은 사용자 정보로 토큰 업데이트
+            console.log('회원가입 시도:', signupData);
+            
+            const signupResponse = await authService.signUp(signupData);
+            console.log('회원가입 응답:', signupResponse);
+            
+            if (signupResponse.success && signupResponse.data) {
+              console.log('신규 사용자 회원가입 성공:', signupResponse.data);
               return {
                 ...token,
-                accessToken: response.data.token,
+                accessToken: account.access_token,
                 provider: account.provider,
-                userId: response.data.id,
-                nickname: response.data.nickname,
-                careerYear: response.data.careerYear,
-                schoolLevel: response.data.schoolLevel,
+                userId: signupResponse.data.id,
+                nickname: signupResponse.data.nickname,
+                careerYear: signupResponse.data.careerYear,
+                schoolLevel: signupResponse.data.schoolLevel,
+                isRegistered: true, // 회원가입 완료
+              };
+            } else {
+              // 회원가입 실패 시 이미 존재하는 사용자일 가능성
+              console.log('회원가입 실패, 기존 사용자일 가능성:', signupResponse.error);
+              
+              // 회원가입 실패 시 기본적으로 신규 사용자로 처리
+              // 클라이언트에서 로컬 스토리지 확인 후 처리
+              return {
+                ...token,
+                accessToken: account.access_token,
+                provider: account.provider,
+                isRegistered: false, // 기본적으로 신규 사용자
               };
             }
           } catch (error) {
-            console.error(`${account.provider} 로그인 API 호출 실패:`, error);
+            console.error(`${account.provider} API 호출 실패:`, error);
+            
+            // 에러 발생 시 기본적으로 신규 사용자로 처리
+            return {
+              ...token,
+              accessToken: account.access_token,
+              provider: account.provider,
+              isRegistered: false,
+            };
           }
         }
         
@@ -125,6 +156,7 @@ const handler = NextAuth({
       if (extendedSession.user) {
         extendedSession.user.accessToken = extendedToken.accessToken;
         extendedSession.user.provider = extendedToken.provider;
+        extendedSession.user.isRegistered = extendedToken.isRegistered;
         // 백엔드에서 받은 추가 정보도 포함
         if (extendedToken.userId) {
           extendedSession.user.id = extendedToken.userId;

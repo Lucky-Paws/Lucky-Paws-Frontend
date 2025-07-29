@@ -21,6 +21,23 @@ export default function Home() {
     if (status === 'loading') return; // 로딩 중일 때는 기다림
     if (!session) {
       router.push('/landing'); // 로그인되지 않으면 랜딩페이지로
+    } else {
+      // 소셜 로그인 사용자가 가입되지 않은 경우 회원가입 페이지로 리다이렉트
+      const user = session.user as any;
+      if (user?.provider && !user?.isRegistered) {
+        // 로컬 스토리지에서 사용자 상태 확인
+        const userKey = `${user.provider}_${user.email}`;
+        const isRegistered = localStorage.getItem(userKey) === 'registered';
+        
+        if (isRegistered) {
+          console.log('로컬에서 기존 사용자 확인됨:', userKey);
+          // 로컬에서 기존 사용자로 확인되면 페이지 새로고침하여 세션 업데이트
+          window.location.reload();
+        } else {
+          console.log('신규 사용자, 회원가입 페이지로 이동');
+          router.push('/signup');
+        }
+      }
     }
   }, [session, status, router]);
 

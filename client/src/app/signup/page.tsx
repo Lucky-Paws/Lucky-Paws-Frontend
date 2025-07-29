@@ -32,6 +32,13 @@ export default function Signup() {
     if (!session) {
       router.push('/landing');
     } else {
+      // 이미 가입된 사용자는 메인 페이지로 리다이렉트
+      const user = session.user as any;
+      if (user?.isRegistered) {
+        router.push('/');
+        return;
+      }
+      
       // 소셜 로그인 정보를 기본값으로 설정
       setFormData(prev => ({
         ...prev,
@@ -74,8 +81,17 @@ export default function Signup() {
       
       if (response.success) {
         alert('회원가입이 완료되었습니다.');
-        // 메인 페이지로 이동
-        router.push('/');
+        
+        // 로컬 스토리지에 사용자 가입 상태 저장
+        const user = session?.user as any;
+        if (user?.provider && user?.email) {
+          const userKey = `${user.provider}_${user.email}`;
+          localStorage.setItem(userKey, 'registered');
+          console.log('로컬에 사용자 가입 상태 저장:', userKey);
+        }
+        
+        // 세션 업데이트를 위해 페이지 새로고침
+        window.location.href = '/';
       } else {
         alert(response.error?.message || '회원가입에 실패했습니다.');
       }

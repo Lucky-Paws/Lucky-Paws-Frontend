@@ -64,7 +64,7 @@ cp .env.example .env.local
 
 2. `.env.local` 파일 수정
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8080
+NEXT_PUBLIC_API_URL=http://43.200.175.153:8080
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-key
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -91,29 +91,42 @@ npm start
 
 백엔드 API와의 연동은 `/src/services` 디렉토리의 서비스 파일들을 통해 이루어집니다.
 
+### 현재 지원하는 백엔드 API
+- `POST /auth/signup`: 회원가입
+- `POST /auth/login`: 로그인
+
+### 임시 모의 API (백엔드 개발 중)
+- 게시글 관련 API (`/mock/posts/*`)
+- 댓글 관련 API (`/mock/posts/*/comments/*`)
+- 채팅 관련 API (`/mock/chat/*`)
+- 사용자 관련 API (`/mock/users/*`)
+- 검색 관련 API (`/mock/search/*`)
+
 ### 주요 서비스
-- `authService`: 인증 관련 API
-- `postService`: 게시글 관련 API
-- `commentService`: 댓글 관련 API
-- `chatService`: 채팅 관련 API
-- `reactionService`: 리액션 관련 API
+- `authService`: 인증 관련 API (실제 백엔드 연동)
+- `postService`: 게시글 관련 API (모의 데이터)
+- `commentService`: 댓글 관련 API (모의 데이터)
+- `chatService`: 채팅 관련 API (모의 데이터)
+- `reactionService`: 리액션 관련 API (모의 데이터)
 
 ### API 클라이언트 사용 예시
 ```typescript
 import { postService } from '@/services/postService';
 
-// 게시글 목록 조회
+// 게시글 목록 조회 (모의 데이터)
 const posts = await postService.getPosts({ 
   category: '학생지도',
   sortBy: 'latest' 
 });
 
-// 게시글 작성
-const newPost = await postService.createPost({
-  title: '제목',
-  content: '내용',
-  category: '학생지도',
-  tags: ['초등학교', '상담']
+// 회원가입 (실제 백엔드)
+const signupResult = await authService.signUp({
+  email: 'user@example.com',
+  password: 'password123',
+  name: '사용자명',
+  nickname: '닉네임',
+  careerYear: 1,
+  schoolLevel: '초등'
 });
 ```
 
