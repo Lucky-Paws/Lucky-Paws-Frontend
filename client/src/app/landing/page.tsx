@@ -37,7 +37,13 @@ export default function Landing() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       {/* 로고 */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 text-center">로고</h1>
+        <img 
+          src="/logo.svg" 
+          alt="Lucky Paws" 
+          className="w-32 h-32 mx-auto"
+        />
+        <h1 className="text-2xl font-bold text-gray-800 text-center mt-4">Lucky Paws</h1>
+        <p className="text-sm text-gray-600 text-center mt-2">교사 커뮤니티 플랫폼</p>
       </div>
 
       {/* 로그인 버튼들 */}
