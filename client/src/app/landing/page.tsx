@@ -10,7 +10,18 @@ export default function Landing() {
 
   useEffect(() => {
     if (session) {
-      router.push('/');
+      // 소셜 로그인 사용자는 항상 메인 페이지로 이동
+      const user = session.user as any;
+      console.log('랜딩 페이지 - 세션 정보:', user);
+      
+      if (user?.provider) {
+        console.log('소셜 로그인 사용자, 메인 페이지로 이동');
+        router.push('/');
+      } else {
+        // 일반 로그인 사용자도 메인 페이지로
+        console.log('일반 로그인 사용자, 메인 페이지로 이동');
+        router.push('/');
+      }
     }
   }, [session, router]);
 
@@ -33,7 +44,7 @@ export default function Landing() {
       <div className="w-full max-w-xs space-y-3">
         {/* 카카오 로그인 */}
         <button
-          onClick={() => signIn('kakao', { callbackUrl: '/' })}
+          onClick={() => signIn('kakao')}
           className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-4 px-6 rounded-lg flex items-center justify-center gap-3 transition-colors"
         >
           <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center">
@@ -44,7 +55,7 @@ export default function Landing() {
 
         {/* 구글 로그인 */}
         <button
-          onClick={() => signIn('google', { callbackUrl: '/' })}
+          onClick={() => signIn('google')}
           className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium py-4 px-6 rounded-lg border border-gray-300 flex items-center justify-center gap-3 transition-colors"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">

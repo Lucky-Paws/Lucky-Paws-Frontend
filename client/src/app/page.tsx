@@ -22,12 +22,10 @@ export default function Home() {
     if (!session) {
       router.push('/landing'); // 로그인되지 않으면 랜딩페이지로
     } else {
-      // 소셜 로그인 사용자가 가입되지 않은 경우 회원가입 페이지로 리다이렉트
+      // 모든 로그인 사용자는 메인 페이지에 머무름
       const user = session.user as any;
-      if (user?.provider && !user?.isRegistered) {
-        console.log('신규 사용자, 회원가입 페이지로 이동');
-        router.push('/signup');
-      }
+      console.log('메인 페이지 - 세션 정보:', user);
+      console.log('사용자 인증 완료');
     }
   }, [session, status, router]);
 

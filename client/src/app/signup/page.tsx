@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { authService, SignupRequestDto } from '@/services/authService';
 
@@ -32,12 +32,18 @@ export default function Signup() {
     if (!session) {
       router.push('/landing');
     } else {
-      // 이미 가입된 사용자는 메인 페이지로 리다이렉트
+      // 소셜 로그인 사용자는 바로 메인 페이지로 리다이렉션
       const user = session.user as any;
-      if (user?.isRegistered) {
+      console.log('회원가입 페이지 - 세션 정보:', user);
+      
+      if (user?.provider) {
+        console.log('소셜 로그인 사용자, 메인 페이지로 이동');
         router.push('/');
         return;
       }
+      
+      // 일반 로그인 사용자만 회원가입 페이지에 머무름
+      console.log('일반 로그인 사용자, 회원가입 진행');
       
       // 소셜 로그인 정보를 기본값으로 설정
       setFormData(prev => ({
@@ -47,6 +53,11 @@ export default function Signup() {
       }));
     }
   }, [session, status, router]);
+
+  const handleBack = () => {
+    // 로그아웃 후 랜딩 페이지로 이동
+    signOut({ callbackUrl: '/landing' });
+  };
 
   const handleComplete = async () => {
     // 필수 필드 검증 (닉네임, 연차, 학교만 체크)
@@ -88,8 +99,10 @@ export default function Signup() {
         // 회원가입 실패 시 이미 가입된 사용자일 가능성
         console.log('회원가입 실패:', response.error);
         
-        // 이미 가입된 사용자로 간주
+        // 이미 가입된 사용자로 간주하고 바로 메인 페이지로 이동
         alert('이미 가입된 계정입니다. 메인 페이지로 이동합니다.');
+        
+        // 바로 메인 페이지로 이동
         window.location.href = '/';
       }
     } catch (error) {
@@ -149,7 +162,7 @@ export default function Signup() {
     <div className="bg-white min-h-screen">
       {/* Header */}
       <header className="flex items-center justify-between p-4 border-b border-gray-200">
-        <button onClick={() => router.back()} className="p-1">
+        <button onClick={handleBack} className="p-1">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>

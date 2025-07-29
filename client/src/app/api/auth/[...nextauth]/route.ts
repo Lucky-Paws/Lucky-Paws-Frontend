@@ -78,7 +78,8 @@ const handler = NextAuth({
     }),
   ],
   pages: {
-    signIn: "/auth/signin",
+    signIn: "/landing",
+    newUser: "/signup", // 신규 사용자용 페이지
   },
   callbacks: {
     async jwt({ token, user, account }) {
@@ -87,48 +88,36 @@ const handler = NextAuth({
         // 소셜 로그인인 경우 백엔드 API 호출
         if ((account.provider === 'kakao' || account.provider === 'google') && account.access_token) {
           try {
-            // 먼저 로그인 시도 (이미 가입된 사용자인지 확인)
-            const loginData = {
-              email: user.email || `${account.provider}_${Date.now()}@temp.com`,
-              password: account.access_token
-            };
+            console.log('=== 소셜 로그인 처리 시작 ===');
+            console.log('Provider:', account.provider);
+            console.log('Access Token:', account.access_token);
+            console.log('User Email:', user.email);
+            console.log('User ID:', user.id);
             
-            console.log('로그인 시도:', loginData);
+            // 소셜 로그인 사용자를 위한 고유한 이메일 생성
+            const socialEmail = user.email || `${account.provider}_${user.id}@${account.provider}.com`;
             
-            const loginResponse = await authService.login(loginData);
-            console.log('로그인 응답:', loginResponse);
-            
-            if (loginResponse.success && loginResponse.data) {
-              console.log('기존 사용자 로그인 성공:', loginResponse.data);
-              return {
-                ...token,
-                accessToken: loginResponse.data.token,
-                provider: account.provider,
-                userId: loginResponse.data.id,
-                nickname: loginResponse.data.nickname,
-                careerYear: loginResponse.data.careerYear,
-                schoolLevel: loginResponse.data.schoolLevel,
-                isRegistered: true, // 기존 사용자
-              };
-            } else {
-              // 로그인 실패 시 신규 사용자로 간주
-              console.log('로그인 실패, 신규 사용자로 간주');
-              return {
-                ...token,
-                accessToken: account.access_token,
-                provider: account.provider,
-                isRegistered: false, // 신규 사용자
-              };
-            }
-          } catch (error) {
-            console.error(`${account.provider} API 호출 실패:`, error);
-            
-            // 에러 발생 시 기본적으로 신규 사용자로 처리
+            // 소셜 로그인 사용자는 항상 기존 사용자로 간주
+            console.log('✅ 소셜 로그인 사용자, 기존 사용자로 처리');
             return {
               ...token,
               accessToken: account.access_token,
               provider: account.provider,
-              isRegistered: false,
+              userId: user.id,
+              nickname: user.name || '사용자',
+              careerYear: 1,
+              schoolLevel: '초등',
+              isRegistered: true, // 항상 기존 사용자로 설정
+            };
+          } catch (error) {
+            console.error(`❌ ${account.provider} API 호출 실패:`, error);
+            
+            // 에러 발생 시에도 기존 사용자로 처리
+            return {
+              ...token,
+              accessToken: account.access_token,
+              provider: account.provider,
+              isRegistered: true, // 에러 시에도 기존 사용자로 설정
             };
           }
         }
@@ -166,6 +155,15 @@ const handler = NextAuth({
       }
       
       return extendedSession;
+    },
+    async redirect({ url, baseUrl }) {
+      // 로그인 후 리다이렉션 처리
+      if (url.startsWith(baseUrl)) {
+        return url;
+      } else if (url.startsWith('/')) {
+        return `${baseUrl}${url}`;
+      }
+      return baseUrl;
     },
   },
 });

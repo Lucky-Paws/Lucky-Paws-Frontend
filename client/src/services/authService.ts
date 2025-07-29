@@ -36,6 +36,15 @@ export interface LoginResponseDto {
   expiresIn: number;
 }
 
+export interface UserInfoDto {
+  id: number;
+  email: string;
+  name: string;
+  nickname: string;
+  careerYear: number;
+  schoolLevel: string;
+}
+
 class AuthService {
   private async request<T>(
     endpoint: string,
@@ -167,6 +176,56 @@ class AuthService {
       method: 'POST',
       body: JSON.stringify(userData),
     });
+  }
+
+  // 사용자 정보 조회
+  async getUserInfo(token: string): Promise<ApiResponse<UserInfoDto>> {
+    console.log('=== getUserInfo 호출 ===');
+    console.log('Token:', token);
+    
+    try {
+      // 먼저 /api/users/me 시도
+      let response = await this.request<UserInfoDto>('/api/users/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      // 실패하면 /auth/me 시도
+      if (!response.success) {
+        console.log('/api/users/me 실패, /auth/me 시도...');
+        response = await this.request<UserInfoDto>('/auth/me', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      }
+      
+      // 여전히 실패하면 /users/me 시도
+      if (!response.success) {
+        console.log('/auth/me 실패, /users/me 시도...');
+        response = await this.request<UserInfoDto>('/users/me', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      }
+      
+      console.log('getUserInfo 최종 응답:', response);
+      return response;
+    } catch (error) {
+      console.error('getUserInfo 에러:', error);
+      return {
+        success: false,
+        error: {
+          code: 'API_ERROR',
+          message: '사용자 정보 조회 중 오류가 발생했습니다.'
+        }
+      };
+    }
   }
 }
 
