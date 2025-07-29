@@ -122,7 +122,7 @@ class AuthService {
           password: tempPassword
         }),
       });
-    } catch (error) {
+    } catch {
       console.log('카카오 로그인 실패, 모의 응답 반환');
       // 로그인 실패 시 모의 응답 반환
       return {
@@ -149,7 +149,7 @@ class AuthService {
           password: tempPassword
         }),
       });
-    } catch (error) {
+    } catch {
       console.log('구글 로그인 실패, 모의 응답 반환');
       // 로그인 실패 시 모의 응답 반환
       return {
@@ -216,8 +216,8 @@ class AuthService {
       
       console.log('getUserInfo 최종 응답:', response);
       return response;
-    } catch (error) {
-      console.error('getUserInfo 에러:', error);
+    } catch {
+      console.error('getUserInfo 에러 발생');
       return {
         success: false,
         error: {

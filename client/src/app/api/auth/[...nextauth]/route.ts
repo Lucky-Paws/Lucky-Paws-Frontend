@@ -109,8 +109,8 @@ const handler = NextAuth({
               schoolLevel: '초등',
               isRegistered: true, // 항상 기존 사용자로 설정
             };
-          } catch (error) {
-            console.error(`❌ ${account.provider} API 호출 실패:`, error);
+          } catch {
+            console.error(`❌ ${account.provider} API 호출 실패`);
             
             // 에러 발생 시에도 기존 사용자로 처리
             return {

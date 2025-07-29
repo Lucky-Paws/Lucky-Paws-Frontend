@@ -1,7 +1,7 @@
 import { API_BASE_URL } from './config';
 
 interface RequestOptions extends RequestInit {
-  params?: Record<string, any>;
+  params?: Record<string, string | number | boolean>;
 }
 
 class ApiClient {
@@ -34,7 +34,7 @@ class ApiClient {
     // URL 파라미터 처리
     let url = `${this.baseURL}${endpoint}`;
     if (params) {
-      const queryString = new URLSearchParams(params).toString();
+      const queryString = new URLSearchParams(params as Record<string, string>).toString();
       url += `?${queryString}`;
     }
 
@@ -46,7 +46,7 @@ class ApiClient {
     };
 
     if (token) {
-      (finalHeaders as any)['Authorization'] = `Bearer ${token}`;
+      (finalHeaders as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
     try {
@@ -66,9 +66,9 @@ class ApiClient {
       }
 
       return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
+    } catch {
+      console.error('API request failed');
+      throw new Error('API request failed');
     }
   }
 
@@ -177,7 +177,7 @@ class ApiClient {
     return this.request<T>(endpoint, { ...options, method: 'GET' });
   }
 
-  async post<T>(endpoint: string, data?: any, options?: RequestOptions): Promise<T> {
+  async post<T>(endpoint: string, data?: Record<string, unknown>, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'POST',
@@ -185,7 +185,7 @@ class ApiClient {
     });
   }
 
-  async put<T>(endpoint: string, data?: any, options?: RequestOptions): Promise<T> {
+  async put<T>(endpoint: string, data?: Record<string, unknown>, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
@@ -193,7 +193,7 @@ class ApiClient {
     });
   }
 
-  async patch<T>(endpoint: string, data?: any, options?: RequestOptions): Promise<T> {
+  async patch<T>(endpoint: string, data?: Record<string, unknown>, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PATCH',
