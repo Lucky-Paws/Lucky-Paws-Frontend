@@ -1,6 +1,6 @@
 import { ApiResponse } from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://43.200.175.153:8080/api';
 
 export interface SignupRequestDto {
   email: string;
@@ -36,12 +36,18 @@ export interface LoginResponseDto {
   expiresIn: number;
 }
 
+export interface LoginRequestDto {
+  username: string;
+  password: string;
+}
+
 class AuthService {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`;
+    console.log('API 요청 URL:', url);
 
     const defaultHeaders = {
       'Content-Type': 'application/json',
@@ -55,9 +61,18 @@ class AuthService {
       },
     };
 
+    console.log('API 요청 설정:', {
+      method: config.method,
+      headers: config.headers,
+      body: config.body ? JSON.parse(config.body as string) : undefined
+    });
+
     try {
       const response = await fetch(url, config);
+      console.log('API 응답 상태:', response.status, response.statusText);
+      
       const data = await response.json();
+      console.log('API 응답 데이터:', data);
 
       // 스프링 부트 응답 형식에 맞춰 처리
       if (response.ok) {
@@ -69,6 +84,7 @@ class AuthService {
         };
       } else {
         // 에러 응답
+        console.error('API 에러 응답:', data);
         return {
           success: false,
           error: {
@@ -91,6 +107,7 @@ class AuthService {
 
   // 카카오 로그인
   async kakaoLogin(accessToken: string): Promise<ApiResponse<LoginResponseDto>> {
+    console.log('카카오 로그인 API 호출:', { accessToken: accessToken.substring(0, 10) + '...' });
     return this.request<LoginResponseDto>('/auth/kakao/login', {
       method: 'POST',
       body: JSON.stringify({
@@ -102,6 +119,7 @@ class AuthService {
 
   // 구글 로그인
   async googleLogin(accessToken: string): Promise<ApiResponse<LoginResponseDto>> {
+    console.log('구글 로그인 API 호출:', { accessToken: accessToken.substring(0, 10) + '...' });
     return this.request<LoginResponseDto>('/auth/google/login', {
       method: 'POST',
       body: JSON.stringify({
@@ -116,6 +134,14 @@ class AuthService {
     return this.request<SignupResponseDto>('/auth/signup', {
       method: 'POST',
       body: JSON.stringify(userData),
+    });
+  }
+
+  // 일반 로그인
+  async login(credentials: LoginRequestDto): Promise<ApiResponse<LoginResponseDto>> {
+    return this.request<LoginResponseDto>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
     });
   }
 }
