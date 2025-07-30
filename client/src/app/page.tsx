@@ -16,16 +16,28 @@ export default function Home() {
   const { posts: todaysPosts } = usePosts({ sortBy: 'popular' });
   const { posts: careerPosts } = usePosts({ category: '학부모상담' });
   const { posts: guidancePosts } = usePosts({ category: '학생지도' });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    if (status === 'loading') return; // 로딩 중일 때는 기다림
-    if (!session) {
-      router.push('/landing'); // 로그인되지 않으면 랜딩페이지로
-    } else {
-      // 모든 로그인 사용자는 메인 페이지에 머무름
-      const user = session.user as any;
-      console.log('메인 페이지 - 세션 정보:', user);
-      console.log('사용자 인증 완료');
+    // localStorage에서 토큰 확인 (일반 로그인)
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
+      setIsAuthenticated(true);
+      return;
+    }
+    
+    // NextAuth 세션 확인 (소셜 로그인)
+    if (status === 'loading') return;
+    
+    if (session) {
+      setIsAuthenticated(true);
+      const sessionUser = session.user as any;
+      console.log('메인 페이지 - 세션 정보:', sessionUser);
+    } else if (!token) {
+      // 토큰도 없고 세션도 없으면 랜딩 페이지로
+      router.push('/landing');
     }
   }, [session, status, router]);
 
@@ -37,7 +49,7 @@ export default function Home() {
     );
   }
 
-  if (!session) {
+  if (!isAuthenticated) {
     return null; // 리다이렉트 중일 때는 아무것도 표시하지 않음
   }
 

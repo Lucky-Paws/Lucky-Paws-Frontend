@@ -2,25 +2,52 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import BottomNavigation from '@/components/BottomNavigation';
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [userData, setUserData] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // localStorage에서 사용자 정보 확인 (일반 로그인)
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (token && userStr) {
+      const user = JSON.parse(userStr);
+      setUserData(user);
+      setIsAuthenticated(true);
+      return;
+    }
+    
+    // NextAuth 세션 확인 (소셜 로그인)
     if (status === 'loading') return;
-    if (!session) {
+    
+    if (session) {
+      setUserData(session.user);
+      setIsAuthenticated(true);
+    } else if (!token) {
       router.push('/landing');
     }
   }, [session, status, router]);
 
   const handleLogout = () => {
-    signOut({ callbackUrl: '/landing' });
+    // localStorage 클리어
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // NextAuth 로그아웃
+    if (session) {
+      signOut({ callbackUrl: '/landing' });
+    } else {
+      router.push('/landing');
+    }
   };
 
-  if (status === 'loading') {
+  if (status === 'loading' || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">로딩중...</div>
@@ -28,11 +55,11 @@ export default function ProfilePage() {
     );
   }
 
-  if (!session) {
+  if (!userData) {
     return null;
   }
 
-  const user = session.user as any;
+  const user = userData;
 
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
@@ -65,6 +92,11 @@ export default function ProfilePage() {
               <p className="text-gray-600">
                 {user.email || '이메일 정보 없음'}
               </p>
+              {user.schoolLevel && (
+                <p className="text-sm text-gray-500">
+                  {user.schoolLevel} 교사 {user.careerYear}년차
+                </p>
+              )}
               {user.provider && (
                 <div className="flex items-center mt-1">
                   <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">

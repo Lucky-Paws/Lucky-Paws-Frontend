@@ -1,16 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { authService, SignupRequestDto } from '@/services/authService';
 
 export default function Signup() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const [formData, setFormData] = useState<SignupRequestDto>({
     email: '',
-    password: '', // 임시 비밀번호로 자동 생성됨
+    password: '',
     name: '',
     nickname: '',
     careerYear: 1,
@@ -27,42 +25,14 @@ export default function Signup() {
   const careerOptions = ['1년차', '2년차', '3년차', '4년차', '5년차', '6-10년차', '11-20년차', '20년차 이상'];
   const schoolOptions = ['초등', '중등', '고등'];
 
-  useEffect(() => {
-    if (status === 'loading') return;
-    if (!session) {
-      router.push('/landing');
-    } else {
-      // 소셜 로그인 사용자는 바로 메인 페이지로 리다이렉션
-      const user = session.user as any;
-      console.log('회원가입 페이지 - 세션 정보:', user);
-      
-      if (user?.provider) {
-        console.log('소셜 로그인 사용자, 메인 페이지로 이동');
-        router.push('/');
-        return;
-      }
-      
-      // 일반 로그인 사용자만 회원가입 페이지에 머무름
-      console.log('일반 로그인 사용자, 회원가입 진행');
-      
-      // 소셜 로그인 정보를 기본값으로 설정
-      setFormData(prev => ({
-        ...prev,
-        email: session.user?.email || '',
-        name: session.user?.name || ''
-      }));
-    }
-  }, [session, status, router]);
-
   const handleBack = () => {
-    // 로그아웃 후 랜딩 페이지로 이동
-    signOut({ callbackUrl: '/landing' });
+    router.push('/login');
   };
 
   const handleComplete = async () => {
-    // 필수 필드 검증 (닉네임, 연차, 학교만 체크)
-    if (!formData.nickname || !formData.schoolLevel) {
-      alert('닉네임과 학교를 선택해주세요.');
+    // 필수 필드 검증
+    if (!formData.email || !formData.password || !formData.name || !formData.nickname || !formData.schoolLevel) {
+      alert('모든 필드를 입력해주세요.');
       return;
     }
 
@@ -80,30 +50,13 @@ export default function Signup() {
         reader.readAsDataURL(profileImage);
       }
 
-      // 소셜 로그인 사용자를 위한 임시 비밀번호 생성
-      const tempPassword = `social_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      const signupData = {
-        ...formData,
-        password: tempPassword // 임시 비밀번호 사용
-      };
-
-      const response = await authService.signUp(signupData);
+      const response = await authService.signUp(formData);
       
       if (response.success) {
         alert('회원가입이 완료되었습니다.');
-        
-        // 세션 업데이트를 위해 페이지 새로고침
-        window.location.href = '/';
+        router.push('/login');
       } else {
-        // 회원가입 실패 시 이미 가입된 사용자일 가능성
-        console.log('회원가입 실패:', response.error);
-        
-        // 이미 가입된 사용자로 간주하고 바로 메인 페이지로 이동
-        alert('이미 가입된 계정입니다. 메인 페이지로 이동합니다.');
-        
-        // 바로 메인 페이지로 이동
-        window.location.href = '/';
+        alert(response.error?.message || '회원가입에 실패했습니다.');
       }
     } catch (error) {
       console.error('Signup error:', error);
@@ -146,17 +99,6 @@ export default function Signup() {
     }));
   };
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">로딩중...</div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return null;
-  }
 
   return (
     <div className="bg-white min-h-screen">
@@ -201,7 +143,40 @@ export default function Signup() {
           </div>
         </div>
 
-        {/* Nickname Input Only */}
+        {/* Form Inputs */}
+        <div className="mb-4">
+          <input
+            type="email"
+            placeholder="이메일"
+            value={formData.email}
+            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+            className="w-full bg-gray-100 p-4 rounded-lg"
+            required
+          />
+        </div>
+
+        <div className="mb-4">
+          <input
+            type="password"
+            placeholder="비밀번호"
+            value={formData.password}
+            onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+            className="w-full bg-gray-100 p-4 rounded-lg"
+            required
+          />
+        </div>
+
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="이름"
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            className="w-full bg-gray-100 p-4 rounded-lg"
+            required
+          />
+        </div>
+
         <div className="mb-8">
           <input
             type="text"
@@ -209,6 +184,7 @@ export default function Signup() {
             value={formData.nickname}
             onChange={(e) => setFormData(prev => ({ ...prev, nickname: e.target.value }))}
             className="w-full bg-gray-100 p-4 rounded-lg"
+            required
           />
         </div>
 
