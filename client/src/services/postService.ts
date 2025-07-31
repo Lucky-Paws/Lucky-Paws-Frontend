@@ -17,25 +17,30 @@ export interface UpdatePostDto {
 }
 
 export interface PostQueryParams {
-  teacherLevel?: TeacherLevel;
   category?: PostCategory;
+  page?: number;
+  pageSize?: number;
+  teacherLevel?: TeacherLevel;
   isAnswered?: boolean;
   sortBy?: 'latest' | 'popular';
-  page?: number;
-  limit?: number;
 }
 
 export interface PostListResponse {
-  posts: Post[];
-  total: number;
   page: number;
-  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  posts: Post[];
 }
 
 export const postService = {
   // 게시글 목록 조회
   async getPosts(params?: PostQueryParams): Promise<PostListResponse> {
-    return apiClient.get<PostListResponse>(API_ENDPOINTS.POSTS.LIST, { params });
+    const queryParams = {
+      ...params,
+      page: params?.page || 1,
+      pageSize: params?.pageSize || 10
+    };
+    return apiClient.get<PostListResponse>(API_ENDPOINTS.POSTS.LIST, { params: queryParams });
   },
 
   // 게시글 상세 조회

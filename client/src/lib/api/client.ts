@@ -18,9 +18,19 @@ class ApiClient {
   private async getAuthToken(): Promise<string | null> {
     if (typeof window === 'undefined') return null;
     
-    // NextAuth 세션에서 토큰 가져오기
-    const session = await fetch('/api/auth/session').then(res => res.json()) as { accessToken?: string };
-    return session?.accessToken || null;
+    // localStorage에서 토큰 가져오기
+    const token = localStorage.getItem('token');
+    if (token) {
+      return token;
+    }
+    
+    // NextAuth 세션에서 토큰 가져오기 (폴백)
+    try {
+      const session = await fetch('/api/auth/session').then(res => res.json()) as { accessToken?: string };
+      return session?.accessToken || null;
+    } catch {
+      return null;
+    }
   }
 
   private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
@@ -50,13 +60,18 @@ class ApiClient {
     }
 
     try {
+      console.log('API 요청:', url, finalHeaders);
+      
       const response = await fetch(url, {
         ...restOptions,
         headers: finalHeaders,
       });
 
+      console.log('API 응답 상태:', response.status);
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: 'Network error' })) as { message?: string };
+        console.error('API 에러:', error);
         throw new Error(error.message || `HTTP error! status: ${response.status}`);
       }
 
@@ -65,7 +80,9 @@ class ApiClient {
         return {} as T;
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('API 응답 데이터:', data);
+      return data;
     } catch {
       console.error('API request failed');
       throw new Error('API request failed');

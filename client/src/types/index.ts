@@ -17,16 +17,17 @@ export type UserType = 'mentor' | 'mentee';
 
 // Post 관련 타입
 export interface Post {
-  id: string;
+  id: number;
   title: string;
-  content: string;
-  author: User;
-  createdAt: Date;
-  updatedAt?: Date;
-  viewCount: number;
-  likeCount: number;
-  commentCount: number;
-  tags: string[];
+  content?: string;
+  author: string | User;
+  createdAt: string | Date;
+  updatedAt?: string | Date;
+  viewCount?: number;
+  likeCount?: number;
+  likes?: number;
+  commentCount?: number;
+  tags?: string[];
   category?: PostCategory;
   isAnswered?: boolean;
   isHot?: boolean;

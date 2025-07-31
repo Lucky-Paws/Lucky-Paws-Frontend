@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Post, PostCategory, TeacherLevel, ExperienceYears } from '@/types';
+import { postService, PostQueryParams } from '@/services/postService';
 
 interface UsePostsOptions {
   category?: PostCategory;
@@ -53,60 +54,69 @@ export function usePosts(options: UsePostsOptions = {}) {
       setError(null);
       
       try {
-        // 목 데이터 사용 (API 호출 비활성화)
-        console.log('목 데이터 사용 중');
+        // API 호출 파라미터 준비
+        const queryParams: PostQueryParams = {
+          category: options.category,
+          teacherLevel: options.teacherLevel,
+          isAnswered: options.isAnswered,
+          sortBy: options.sortBy,
+          page: page,
+          pageSize: 10
+        };
         
-        let allPosts = generateMockPosts();
+        console.log('API 호출 파라미터:', queryParams);
         
-        // Apply filters
-        if (options.category) {
-          allPosts = allPosts.filter(post => post.category === options.category);
+        // 실제 API 호출
+        try {
+          const response = await postService.getPosts(queryParams);
+          console.log('API 응답:', response);
+          
+          // 날짜 문자열을 Date 객체로 변환
+          const postsWithDates = response.posts.map(post => ({
+            ...post,
+            createdAt: new Date(post.createdAt as any)
+          }));
+          
+          setPosts(postsWithDates);
+          setTotal(response.totalCount);
+        } catch (apiError) {
+          console.error('API 호출 실패:', apiError);
+          console.log('목 데이터로 폴백합니다.');
+          
+          // API 호출 실패 시 목 데이터 사용
+          let allPosts = generateMockPosts();
+          
+          // Apply filters
+          if (options.category) {
+            allPosts = allPosts.filter(post => post.category === options.category);
+          }
+          
+          if (options.teacherLevel) {
+            allPosts = allPosts.filter(post => post.author.teacherType === options.teacherLevel);
+          }
+          
+          if (options.isAnswered !== undefined) {
+            allPosts = allPosts.filter(post => post.isAnswered === options.isAnswered);
+          }
+          
+          if (options.searchQuery) {
+            const query = options.searchQuery.toLowerCase();
+            allPosts = allPosts.filter(post => 
+              post.title.toLowerCase().includes(query) || 
+              post.content.toLowerCase().includes(query)
+            );
+          }
+          
+          // Apply sorting
+          if (options.sortBy === 'popular') {
+            allPosts.sort((a, b) => b.likeCount - a.likeCount);
+          } else {
+            allPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+          }
+          
+          setPosts(allPosts);
+          setTotal(allPosts.length);
         }
-        
-        if (options.teacherLevel) {
-          allPosts = allPosts.filter(post => post.author.teacherType === options.teacherLevel);
-        }
-        
-        if (options.experienceYears) {
-          allPosts = allPosts.filter(post => {
-            const years = post.author.yearsOfExperience;
-            if (!years) return false;
-            
-            switch (options.experienceYears) {
-              case '1년차': return years === 1;
-              case '2년차': return years === 2;
-              case '3년차': return years === 3;
-              case '4년차': return years === 4;
-              case '5년차': return years === 5;
-              case '6-10년차': return years >= 6 && years <= 10;
-              case '11-20년차': return years >= 11 && years <= 20;
-              case '20년차 이상': return years > 20;
-              default: return true;
-            }
-          });
-        }
-        
-        if (options.isAnswered !== undefined) {
-          allPosts = allPosts.filter(post => post.isAnswered === options.isAnswered);
-        }
-        
-        if (options.searchQuery) {
-          const query = options.searchQuery.toLowerCase();
-          allPosts = allPosts.filter(post => 
-            post.title.toLowerCase().includes(query) || 
-            post.content.toLowerCase().includes(query)
-          );
-        }
-        
-        // Apply sorting
-        if (options.sortBy === 'popular') {
-          allPosts.sort((a, b) => b.likeCount - a.likeCount);
-        } else {
-          allPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-        }
-        
-        setPosts(allPosts);
-        setTotal(allPosts.length);
       } catch {
         setError('게시글을 불러오는데 실패했습니다.');
       } finally {
